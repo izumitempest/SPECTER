@@ -32,3 +32,4 @@ The index table below is updated in the same commit as the entry it lists.
 |---|---|---|---|---|
 | 0001 | 2026-09-11 | milestone | Spec merged and frozen at v3.3 | `spec-v3.3` |
 | 0002 | 2026-09-11 | change | Project scaffold: file tree, packaging, CI, module stubs | — |
+| 0003 | 2026-09-11 | change | Task list: milestone-aligned plan (docs/TASKS.md) | — |
