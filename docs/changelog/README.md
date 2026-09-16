@@ -39,3 +39,5 @@ The index table below is updated in the same commit as the entry it lists.
 | 0007 | 2026-09-15 | change | M0-4 done: config loader (env + .env, production fail-fast) | — |
 | 0008 | 2026-09-15 | change | M0-5 done: SQLite schema v1 and connection layer | — |
 | 0009 | 2026-09-15 | change | M0-6 done: read-only mmap accessor | — |
+| 0010 | 2026-09-15 | change | M0-7 done: acquisition hashing + chunk sidecar | — |
+| 0011 | 2026-09-15 | change | M0-8 done: hash-chained audit log | — |
