@@ -24,7 +24,7 @@ into the spec (§0). The drop order for behind-schedule cuts is defined in §18.
 | M0-3 | Scaffold: packaging, CI, source tree, module stubs, changelog practice | App A, §4 | [x] |
 | M0-4 | `config.py`: env loading, `.env.example`, production fail-fast on placeholders | §12 | [x] |
 | M0-5 | `db.py`: schema v1 (11 tables), WAL + busy_timeout, `schema_version` bootstrap | §15, §4 | [x] |
-| M0-6 | `mmap_accessor`: POSIX `PROT_READ` / Windows `ACCESS_READ`, 64-bit guard | §6, §9.1, §13 | [ ] |
+| M0-6 | `mmap_accessor`: POSIX `PROT_READ` / Windows `ACCESS_READ`, 64-bit guard | §6, §9.1, §13 | [x] |
 | M0-7 | `hashing.py` + `sidecar.py`: single-pass whole-image + chunk hashing, sidecar write, partial-trailing-chunk rule | §6.2, §7.1, P-03 | [ ] |
 | M0-8 | `audit`: pinned canonical serialization, genesis, co-committed append, O(n) verify | §8, P-04 | [ ] |
 | M0-9 | Scanner skeleton: windowed pass (128 MiB, 64 B overlap), alignment filter, safety cap, cursor, signature registry | §9.1, §9.3, §9.4, P-05/P-07/P-08 | [ ] |
