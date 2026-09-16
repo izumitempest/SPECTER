@@ -37,3 +37,4 @@ The index table below is updated in the same commit as the entry it lists.
 | 0005 | 2026-09-15 | change | Implementation plan (docs/IMPLEMENTATION.md) | — |
 | 0006 | 2026-09-15 | change | History squashed to one commit; `spec-v3.3` re-tagged | `spec-v3.3` |
 | 0007 | 2026-09-15 | change | M0-4 done: config loader (env + .env, production fail-fast) | — |
+| 0008 | 2026-09-15 | change | M0-5 done: SQLite schema v1 and connection layer | — |
