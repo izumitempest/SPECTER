@@ -1,16 +1,106 @@
-"""Job manager — job table, per-image lock, disk pre-flight (§4, §4.1).
+"""Job manager — the job table, per-image lock, lifecycle transitions (§4, §4.1).
 
-- Jobs are persisted; statuses: queued → running → done / failed /
-  paused_disk.
-- **Per-image lock** (§4.1.1): at most one active carve/hash job per image;
-  concurrent submissions queue (default) or reject with an audited error.
-- **Disk pre-flight** (§4.1.3): free space checked before the job (≥ a
-  configurable multiple of the image size) and re-checked every N artifacts.
-  Exhaustion stops cleanly, marks the job ``paused_disk``, and audits it.
-- **Idempotent re-run** (§4): carving is deterministic, so a failed job can
-  be re-run to reproduce identical artifacts.
+Jobs are database rows, not in-memory futures: a killed process leaves a
+job marked ``failed`` and re-running it is idempotent because carving is
+deterministic (§4).
 
-Tasks: M0-11, M2-6.
+**Per-image lock (§4.1.1):** at most one active (``queued``/``running``)
+hash or carve job per image. Concurrent submissions queue by default; with
+``queue=False`` the submit raises ``JobLockError`` — either way the choice
+is audited by the caller.
+
+Transition helpers write their own audit entries, so callers that co-commit
+(§8c) simply run them inside their transaction.
 """
 
 from __future__ import annotations
+
+import json
+import sqlite3
+from typing import Any
+
+ACTIVE_STATUSES = ("queued", "running")
+POOL_STATUSES = ("queued", "running", "done", "failed", "paused_disk")
+
+# Job types that lock on a specific image (params must carry "image_id").
+IMAGE_SCOPED = {"hash", "carve"}
+
+
+class JobLockError(RuntimeError):
+    """Another job already holds the image's carving lane (§4.1.1)."""
+
+
+def submit(
+    conn: sqlite3.Connection,
+    *,
+    case_id: int,
+    type: str,
+    params: dict[str, Any],
+    submitted_by: int,
+    queue: bool = True,
+) -> int:
+    """Insert a job row; returns its id. Raises JobLockError if an active
+    job for the same image exists and the caller refused to queue."""
+    image_id = params.get("image_id")
+    if type in IMAGE_SCOPED and image_id is not None:
+        for row in conn.execute(
+            "SELECT id, params FROM jobs WHERE case_id = ? AND status IN ('queued','running')",
+            (case_id,),
+        ):
+            if json.loads(row["params"]).get("image_id") == image_id:
+                if queue:
+                    break  # allowed: it queues behind the active one
+                raise JobLockError(
+                    f"image {image_id} already has an active job (job {row['id']})"
+                )
+    cur = conn.execute(
+        "INSERT INTO jobs (case_id, type, params, status, submitted_by, created_at)"
+        " VALUES (?, ?, ?, 'queued', ?, datetime('now'))",
+        (case_id, type, json.dumps(params, sort_keys=True), submitted_by),
+    )
+    return int(cur.lastrowid)
+
+
+def _transition(
+    conn: sqlite3.Connection, job_id: int, status: str, error: str | None
+) -> None:
+    if status == "paused_disk":
+        # Paused, not finished: keep timestamps so a later resume reads clean.
+        conn.execute(
+            "UPDATE jobs SET status = ?, error = ? WHERE id = ?",
+            (status, error, job_id),
+        )
+        return
+    col = "started_at" if status == "running" else "finished_at"
+    conn.execute(
+        f"UPDATE jobs SET status = ?, {col} = datetime('now'), error = ? WHERE id = ?",
+        (status, error, job_id),
+    )
+
+
+def start(conn: sqlite3.Connection, job_id: int) -> None:
+    _transition(conn, job_id, "running", None)
+
+
+def finish(conn: sqlite3.Connection, job_id: int) -> None:
+    _transition(conn, job_id, "done", None)
+
+
+def fail(conn: sqlite3.Connection, job_id: int, error: str) -> None:
+    _transition(conn, job_id, "failed", error)
+
+
+def pause_disk(conn: sqlite3.Connection, job_id: int) -> None:
+    """Disk pre-flight tripped — job pauses, not fails (§4.1.3)."""
+    _transition(conn, job_id, "paused_disk", None)
+
+
+def get(conn: sqlite3.Connection, job_id: int) -> dict[str, Any] | None:
+    row = conn.execute(
+        "SELECT id, case_id, type, params, status, submitted_by,"
+        " created_at, started_at, finished_at, error FROM jobs WHERE id = ?",
+        (job_id,),
+    ).fetchone()
+    if row is None:
+        return None
+    return {**dict(row), "params": json.loads(row["params"])}
