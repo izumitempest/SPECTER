@@ -27,8 +27,8 @@ into the spec (§0). The drop order for behind-schedule cuts is defined in §18.
 | M0-6 | `mmap_accessor`: POSIX `PROT_READ` / Windows `ACCESS_READ`, 64-bit guard | §6, §9.1, §13 | [x] |
 | M0-7 | `hashing.py` + `sidecar.py`: single-pass whole-image + chunk hashing, sidecar write, partial-trailing-chunk rule | §6.2, §7.1, P-03 | [x] |
 | M0-8 | `audit`: pinned canonical serialization, genesis, co-committed append, O(n) verify | §8, P-04 | [x] |
-| M0-9 | Scanner skeleton: windowed pass (128 MiB, 64 B overlap), alignment filter, safety cap, cursor, signature registry | §9.1, §9.3, §9.4, P-05/P-07/P-08 | [ ] |
-| M0-10 | Formats MVP: JPEG + PNG minimal structural, golden fixtures (uniform JPEG, EXIF-thumbnail JPEG, bad-CRC PNG) | §9.2, §17 | [ ] |
+| M0-9 | Scanner skeleton: windowed pass (128 MiB, 64 B overlap), alignment filter, safety cap, cursor, signature registry | §9.1, §9.3, §9.4, P-05/P-07/P-08 | [x] |
+| M0-10 | Formats MVP: JPEG + PNG minimal structural, golden fixtures (uniform JPEG, EXIF-thumbnail JPEG, bad-CRC PNG) | §9.2, §17 | [x] |
 | M0-11 | Jobs: manager (job table, per-image lock) + pool (ProcessPoolExecutor) | §4, §4.1.1, E-06 | [ ] |
 | M0-12 | CLI vertical slice: `init` / `image add` / `hash` / `carve` / `list` | §18 M0, §6 | [ ] |
 | M0-13 | Security baseline wiring: argon2id helper (pinned params), JWT keyfile bootstrap in `specter init` | §12, P-12 | [ ] |

@@ -41,3 +41,4 @@ The index table below is updated in the same commit as the entry it lists.
 | 0009 | 2026-09-15 | change | M0-6 done: read-only mmap accessor | — |
 | 0010 | 2026-09-15 | change | M0-7 done: acquisition hashing + chunk sidecar | — |
 | 0011 | 2026-09-15 | change | M0-8 done: hash-chained audit log | — |
+| 0012 | 2026-09-15 | change | M0-9/M0-10: scanner, signature table, JPEG + PNG parsers | — |

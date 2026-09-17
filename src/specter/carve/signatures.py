@@ -1,28 +1,48 @@
 """The signature table — the registry of supported format parsers (§9.2).
 
-Maps each format's header magic to its structural parser. Header bytes are
-the cheap trigger; the parser's own validation does the real work, and every
-candidate must be rejected in O(1) before any expensive scan (P-07).
+Maps header magic bytes to the parser for that format. Header bytes are the
+cheap trigger; the parser's own validation does the real work, and every
+candidate is rejected in O(1) before any expensive scan (P-07).
 
-The signature-table version is included in the audit config snapshot (§8),
-so a change here that alters carving results is traceable.
+Each entry is a ``Signature``:
 
-| Type | Header | Parser module |
-| --- | --- | --- |
-| JPG | ``FF D8 FF`` | ``formats.jpeg`` |
-| PNG | 8-byte signature | ``formats.png`` |
-| GIF | ``47 49 46 38`` | ``formats.gif`` |
-| PDF | ``25 50 44 46`` | ``formats.pdf`` |
-| ZIP | ``50 4B 03 04`` | ``formats.zip`` |
-| EXE | ``4D 5A`` | ``formats.pe`` |
-| SQLite | ``SQLite format 3\\0`` | ``formats.sqlite_fmt`` |
-| BMP | ``42 4D`` | ``formats.bmp`` |
-| MP4 | ``ftyp`` at +4 | ``formats.mp4`` |
+- ``magic``:        the byte string the scanner searches for.
+- ``type``:         the artifact type label written to the DB.
+- ``magic_delta``:  header_start = match_offset + magic_delta. Only MP4 uses
+                    a non-zero delta (its magic ``ftyp`` sits +4 into the box).
 
-Tasks: M0-9 (registry), M1-1/M1-2 (parser implementations).
+The table's version is recorded in the audit config snapshot (§8), so any
+change to carving behavior is traceable to a table version.
 """
 
 from __future__ import annotations
 
-#: Signature-table version, audited via the config snapshot (§8).
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from specter.carve.types import Recovery
+
+#: Signature-table version, recorded in the audit config snapshot (§8).
 SIGNATURE_TABLE_VERSION = 1
+
+ParserFn = Callable[[bytes, int, int], "Recovery | None"]  # (buffer, offset, cap)
+
+
+@dataclass(frozen=True)
+class Signature:
+    type: str
+    magic: bytes
+    parse: ParserFn
+    magic_delta: int = 0
+
+
+# M0-10 ships jpeg + png. M1-1/M1-2 register the remaining seven
+# (gif, pdf, zip, pe, sqlite, bmp, mp4) as they land.
+def default_signatures() -> list[Signature]:
+    """The live registry (built per call; parser imports stay lazy)."""
+    from specter.carve.formats import jpeg, png
+
+    return [
+        Signature("jpg", b"\xff\xd8\xff", jpeg.parse),
+        Signature("png", png.SIGNATURE, png.parse),
+    ]
