@@ -106,11 +106,8 @@ def append(
         timestamp=ts,
     )
     digest = entry_hash(payload)
-    conn.execute(
-        "INSERT INTO audit_entries (case_id, seq, prev_hash, payload, entry_hash, actor, actor_role, recorded_at)"
-        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (case_id, seq, prev_hash, canonical(payload), digest, actor, actor_role, ts),
-    )
+    ins = "INSERT INTO audit_entries (case_id, seq, prev_hash, payload, entry_hash, actor, actor_role, recorded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    conn.execute(ins, (case_id, seq, prev_hash, canonical(payload), digest, actor, actor_role, ts))
     return digest
 
 
@@ -121,11 +118,8 @@ def verify(conn: sqlite3.Connection, case_id: int) -> ChainReport:
     the previous entry (genesis for entry 1); ``entry_hash`` recomputes from
     the stored canonical payload. Returns the first break's seq if found.
     """
-    rows = conn.execute(
-        "SELECT seq, prev_hash, payload, entry_hash FROM audit_entries"
-        " WHERE case_id = ? ORDER BY seq",
-        (case_id,),
-    ).fetchall()
+    q = "SELECT seq, prev_hash, payload, entry_hash FROM audit_entries WHERE case_id = ? ORDER BY seq"
+    rows = conn.execute(q, (case_id,)).fetchall()
 
     expected_prev = genesis(case_id)
     expected_seq = 1

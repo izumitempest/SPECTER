@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS images (
     size INTEGER NOT NULL,
     whole_image_sha256 TEXT,
     merkle_root TEXT,
-    chunk_size INTEGER NOT NULL,
+    chunk_size INTEGER NOT NULL DEFAULT 4194304,  -- 4 MiB (§7.1); set at hash
     chunks_path TEXT,
     chunks_file_sha256 TEXT,
     verified_copy_path TEXT,

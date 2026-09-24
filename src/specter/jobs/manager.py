@@ -53,11 +53,9 @@ def submit(
                 raise JobLockError(
                     f"image {image_id} already has an active job (job {row['id']})"
                 )
-    cur = conn.execute(
-        "INSERT INTO jobs (case_id, type, params, status, submitted_by, created_at)"
-        " VALUES (?, ?, ?, 'queued', ?, datetime('now'))",
-        (case_id, type, json.dumps(params, sort_keys=True), submitted_by),
-    )
+    # Single-line literal SQL; every value is bound via ?, never interpolated.
+    sql = "INSERT INTO jobs (case_id, type, params, status, submitted_by, created_at) VALUES (?, ?, ?, 'queued', ?, datetime('now'))"
+    cur = conn.execute(sql, (case_id, type, json.dumps(params, sort_keys=True), submitted_by))
     return int(cur.lastrowid)
 
 
@@ -71,11 +69,12 @@ def _transition(
             (status, error, job_id),
         )
         return
-    col = "started_at" if status == "running" else "finished_at"
-    conn.execute(
-        f"UPDATE jobs SET status = ?, {col} = datetime('now'), error = ? WHERE id = ?",
-        (status, error, job_id),
-    )
+    # Two literal SQL statements (no interpolation): one per state column.
+    if status == "running":
+        sql = "UPDATE jobs SET status = ?, started_at = datetime('now'), error = ? WHERE id = ?"
+    else:
+        sql = "UPDATE jobs SET status = ?, finished_at = datetime('now'), error = ? WHERE id = ?"
+    conn.execute(sql, (status, error, job_id))
 
 
 def start(conn: sqlite3.Connection, job_id: int) -> None:
@@ -96,11 +95,8 @@ def pause_disk(conn: sqlite3.Connection, job_id: int) -> None:
 
 
 def get(conn: sqlite3.Connection, job_id: int) -> dict[str, Any] | None:
-    row = conn.execute(
-        "SELECT id, case_id, type, params, status, submitted_by,"
-        " created_at, started_at, finished_at, error FROM jobs WHERE id = ?",
-        (job_id,),
-    ).fetchone()
+    sql = "SELECT id, case_id, type, params, status, submitted_by, created_at, started_at, finished_at, error FROM jobs WHERE id = ?"
+    row = conn.execute(sql, (job_id,)).fetchone()
     if row is None:
         return None
     return {**dict(row), "params": json.loads(row["params"])}
