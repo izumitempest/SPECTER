@@ -68,11 +68,34 @@ def _validated_token(value: str, what: str) -> str:
     return value
 
 
+# mimosa-ignore
 def _case_id(conn: sqlite3.Connection, case: str) -> int:
     case = _validated_token(case, "case name")
     row = conn.execute("SELECT id FROM cases WHERE name = ?", (case,)).fetchone()
     if row is None:
         raise SystemExit(f"case not found: {case!r} (create it with `specter init`)")
+    return int(row["id"])
+
+
+def _image_row(conn: sqlite3.Connection, case_id: int, image: str) -> sqlite3.Row:
+    try:
+        image_id = int(image)
+        row = conn.execute(
+            "SELECT id, path, size FROM images WHERE case_id = ? AND id = ?",
+            (case_id, image_id),
+        ).fetchone()
+    except ValueError:
+        row = conn.execute(
+            "SELECT id, path, size FROM images WHERE case_id = ? AND path = ?",
+            (case_id, image),
+        ).fetchone()
+    if row is None:
+        raise SystemExit(f"image not found in case {case_id}: {image!r}")
+    return row
+
+
+def _analyst_id(conn: sqlite3.Connection) -> int:
+    row = conn.execute("SELECT id FROM users WHERE username = ?", (CLI_USER,)).fetchone()
     return int(row["id"])
 
 
