@@ -42,7 +42,7 @@ met *or* the optimization branch opened; density gate run at week 4–5 (P-09).
 
 | ID | Task | Spec | Status |
 | --- | --- | --- | --- |
-| M1-1 | GIF + ZIP parsers (local-header walk, EOCD fallback) + golden fixtures | §9.2, P-06 | [ ] |
+| M1-1 | GIF + ZIP parsers (local-header walk, EOCD fallback) + golden fixtures | §9.2, P-06 | [x] |
 | M1-2 | PDF (last %%EOF), EXE/PE (e_lfanew + PE\\0\\0), SQLite (page math), BMP (clamp), MP4 (box chain 0/1) | §9.2, §9.3 | [ ] |
 | M1-3 | JPEG state machine: marker/entropy modes, E-01 fill bytes, E-01+ dangling FF; committed cjpeg recipes (baseline/-restart/-progressive) | §9.2, P-06, E-01/E-01+/E-10, §17 | [ ] |
 | M1-4 | Defensive parsing: O(1) rejection rule (P-07) enforced by property tests; totality fuzz harness | §9.3, P-07, P-17 | [ ] |

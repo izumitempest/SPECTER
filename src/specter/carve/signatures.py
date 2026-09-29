@@ -36,13 +36,15 @@ class Signature:
     magic_delta: int = 0
 
 
-# M0-10 ships jpeg + png. M1-1/M1-2 register the remaining seven
-# (gif, pdf, zip, pe, sqlite, bmp, mp4) as they land.
+# M0-10 ships jpeg + png. M1-1 adds gif + zip. M1-2 registers the remaining
+# five (pdf, pe, sqlite, bmp, mp4) as they land.
 def default_signatures() -> list[Signature]:
     """The live registry (built per call; parser imports stay lazy)."""
-    from specter.carve.formats import jpeg, png
+    from specter.carve.formats import gif, jpeg, png, zip as zip_fmt
 
     return [
         Signature("jpg", b"\xff\xd8\xff", jpeg.parse),
         Signature("png", png.SIGNATURE, png.parse),
+        Signature("gif", gif.SIGNATURE, gif.parse),
+        Signature("zip", zip_fmt.SIGNATURE, zip_fmt.parse),
     ]
