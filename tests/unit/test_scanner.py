@@ -68,6 +68,37 @@ class TestJpeg:
         r = jpeg.parse(data, 0, len(data))
         assert r is not None and r.confidence == "high" and r.end == len(data)
 
+    def test_fill_bytes_before_marker(self) -> None:
+        """Inside entropy mode, an FF before the real EOI is consumed as fill."""
+        data = (
+            b"\xff\xd8\xff"
+            + b"\xff\xe0" + (6).to_bytes(2, "big") + b"abcd"
+            + b"\xff\xda" + (5).to_bytes(2, "big") + b"\x01\x00\x00"
+            + b"\x10\x22"          # some entropy bytes
+            + b"\xff\xff\xff"      # extra fill bytes before the EOI
+            + b"\xff\xd9"          # EOI
+        )
+        r = jpeg.parse(data, 0, len(data))
+        assert r is not None and r.confidence == "high" and r.end == len(data)
+
+    def test_progressive_second_scan_resumes_entropy(self) -> None:
+        """A progressive JPEG structurally has multiple SOS markers; a second
+        SOS must flip back into entropy mode and keep scanning until the real
+        EOI. This penalty-check exercises that path explicitly."""
+        # scan 1: SOS + entropy (some bytes), then a fake marker FF DA (another SOS)
+        # scan 2: entropy bytes then EOI
+        seg = (
+            b"\xff\xd8\xff"              # SOI
+            + b"\xff\xe0" + (6).to_bytes(2, "big") + b"abcd"   # APP0
+            + b"\xff\xda" + (5).to_bytes(2, "big") + b"\x01\x00\x00"  # SOS (scan 1)
+            + b"\x10\x22\x33"            # entropy data scan 1
+            + b"\xff\xda" + (5).to_bytes(2, "big") + b"\x01\x00\x00"  # SOS (scan 2)
+            + b"\x44\x55"                # entropy data scan 2
+            + b"\xff\xd9"                 # EOI
+        )
+        r = jpeg.parse(seg, 0, len(seg))
+        assert r is not None and r.confidence == "high" and r.end == len(seg)
+
     def test_dangling_ff_falls_back(self) -> None:
         # E-01+: a scan ending on a bare FF with no byte to peek must take the
         # fallback, never a marker parse. No real EOI exists in the buffer.

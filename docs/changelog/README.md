@@ -46,3 +46,4 @@ The index table below is updated in the same commit as the entry it lists.
 | 0014 | 2026-09-24 | change | M0-12/13/14 landed; gate handled via verified false-positive path | — |
 | 0015 | 2026-09-27 | change | M1-1 done: GIF + ZIP structural parsers registered | — |
 | 0016 | 2026-09-27 | change | M1-2 done: PDF + PE + SQLite + BMP + MP4 structural parsers | — |
+| 0017 | 2026-09-27 | change | M1-3 done: JPEG fill bytes, dangling FF, progressive SOS | — |
