@@ -36,15 +36,36 @@ class Signature:
     magic_delta: int = 0
 
 
-# M0-10 ships jpeg + png. M1-1 adds gif + zip. M1-2 registers the remaining
-# five (pdf, pe, sqlite, bmp, mp4) as they land.
 def default_signatures() -> list[Signature]:
     """The live registry (built per call; parser imports stay lazy)."""
-    from specter.carve.formats import gif, jpeg, png, zip as zip_fmt
+    from specter.carve.formats import (
+        bmp,
+        gif,
+        jpeg,
+        mp4,
+        pdf,
+        pe,
+        png,
+        sqlite_fmt,
+        zip as zip_fmt,
+    )
 
     return [
         Signature("jpg", b"\xff\xd8\xff", jpeg.parse),
         Signature("png", png.SIGNATURE, png.parse),
         Signature("gif", gif.SIGNATURE, gif.parse),
+        Signature("pdf", pdf.SIGNATURE, pdf.parse),
         Signature("zip", zip_fmt.SIGNATURE, zip_fmt.parse),
+        Signature("exe", pe.SIGNATURE, pe.parse),
+        Signature("sqlite", sqlite_fmt.SIGNATURE, sqlite_fmt.parse),
+        Signature("bmp", bmp.SIGNATURE, bmp.parse),
+        Signature("mp4", mp4.FTYP, mp4.parse, magic_delta=4),
     ]
+
+
+def look_up_type_by_magic(magic: bytes) -> str:
+    """Map a magic prefix back to the artifact type name (spec §9.2 table)."""
+    for sig in default_signatures():
+        if magic == sig.magic:
+            return sig.type
+    return "unknown"
