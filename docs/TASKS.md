@@ -45,9 +45,9 @@ met *or* the optimization branch opened; density gate run at week 4–5 (P-09).
 | M1-1 | GIF + ZIP parsers (local-header walk, EOCD fallback) + golden fixtures | §9.2, P-06 | [x] |
 | M1-2 | PDF (last %%EOF), EXE/PE (e_lfanew + PE\\0\\0), SQLite (page math), BMP (clamp), MP4 (box chain 0/1) | §9.2, §9.3 | [x] |
 | M1-3 | JPEG state machine: marker/entropy modes, E-01 fill bytes, E-01+ dangling FF, committed cjpeg recipes (baseline/-restart/-progressive) | §9.2, P-06, E-01/E-01+/E-10, §17 | [x] |
-| M1-4 | Defensive parsing: O(1) rejection rule (P-07) enforced by property tests; totality fuzz harness | §9.3, P-07, P-17 | [ ] |
-| M1-5 | Cursor semantics: recovered *and* attempted regions skipped, cross-type nesting suppression, masking-rate counter | §9.4, P-08, E-06 | [ ] |
-| M1-6 | Blob writer path: temp → commit → rename, materialization check, reader retry (5 × 20 ms) | §4.1.2, E-04/E-04+ | [ ] |
+| M1-4 | Defensive parsing: O(1) rejection rule (P-07) enforced by property tests; totality fuzz harness | §9.3, P-07, P-17 | [x] |
+| M1-5 | Cursor semantics: recovered *and* attempted regions skipped, cross-type nesting suppression, masking-rate counter | §9.4, P-08, E-06 | [x] |
+| M1-6 | Blob writer path: temp → commit → rename; writer materialization check; reader 5×20 ms ENOENT retry (E-04) | §4.1.2, E-04/E-04+ | [x] |
 | M1-7 | Corpora C1 (synthetic contiguous) + C2 (mtools FAT32, populate-then-delete), seeded scripts; golden scoring harness | §16.1 | [ ] |
 | M1-8 | Corpus C3 (adversarial list) + mutation fuzzer (P-17) — doubles as the P-09 density corpus | §16.1, §17, P-17 | [ ] |
 | M1-9 | Throughput benchmark: §9.5 targets on reference hardware, cold/warm methodology, results as JSON | §9.5, §16.1 | [ ] |
